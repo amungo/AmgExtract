@@ -30,20 +30,28 @@ int main(int argc, char *argv[])
 
     string fname = argv[1];
     set<int> chans_idx;
-    int max_argc = argc > ARG_MAX_CNT ? ARG_MAX_CNT : argc;
-    for ( int i = CH_IDX_START; i < max_argc; i++ ) {
-        try {
-            int idx = stoi( string(argv[i]) );
-            if ( idx < 0 || idx >= CH_NUM ) {
-                throw invalid_argument( "Bad channel index " + to_string(idx) );
+    if ( argc == 2 ) {
+        chans_idx.insert( 0 );
+        chans_idx.insert( 1 );
+        chans_idx.insert( 2 );
+        chans_idx.insert( 3 );
+    } else {
+        int max_argc = argc > ARG_MAX_CNT ? ARG_MAX_CNT : argc;
+        for ( int i = CH_IDX_START; i < max_argc; i++ ) {
+            try {
+                int idx = stoi( string(argv[i]) );
+                if ( idx < 0 || idx >= CH_NUM ) {
+                    throw invalid_argument( "Bad channel index " + to_string(idx) );
+                }
+                chans_idx.insert( idx );
+            } catch ( invalid_argument& e ) {
+                cout << e.what() << endl;
+                cout << "Use indexes from 0 to " << CH_NUM - 1 << ". Space separated";
+                return 0;
             }
-            chans_idx.insert( idx );
-        } catch ( invalid_argument& e ) {
-            cout << e.what() << endl;
-            cout << "Use indexes from 0 to " << CH_NUM - 1 << ". Space separated";
-            return 0;
         }
     }
+
 
     for ( int idx : chans_idx ) {
         cout << "extracting channel " << idx << endl;
