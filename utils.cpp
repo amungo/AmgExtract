@@ -22,9 +22,9 @@ int64_t get_file_size(const char *fname) {
 int64_t get_file_size(FILE *f) {
     if ( f ) {
         int64_t old_pos = ftell(f);
-        fseek( f, 0, SEEK_END );
-        int64_t sz = ftell(f);
-        fseek( f, old_pos, SEEK_SET );
+        _fseeki64( f, 0, SEEK_END );
+        int64_t sz = _ftelli64(f);
+        _fseeki64( f, old_pos, SEEK_SET );
         return sz;
     } else {
         throw runtime_error( "get_file_size(): File ptr is null" );
