@@ -1,5 +1,7 @@
 #include <stdexcept>
+#include <iostream>
 #include <string>
+
 #include "utils.h"
 #include "decoder.h"
 
@@ -33,7 +35,7 @@ void decode_file(FILE *fin, FILE *fout, int ch, size_t buf_size) {
     if ( !fin || !fout ) {
         throw runtime_error( "decode_file() file ptr is null" );
     }
-    int64_t to_go = get_file_size( fin );
+    int64_t all_size = get_file_size( fin );
     fseek( fin, 0, SEEK_SET );
 
     vector<uint8_t> inbuf;
@@ -42,6 +44,9 @@ void decode_file(FILE *fin, FILE *fout, int ch, size_t buf_size) {
     inbuf.resize( buf_size );
     outbuf.resize( buf_size );
 
+    int64_t to_go = all_size;
+    double last_percent = 0.0;
+    double cur_percent = 0.0;
     while ( to_go >= inbuf.size() ) {
         size_t res = fread( inbuf.data(), sizeof(uint8_t), inbuf.size(), fin );
         if ( res != inbuf.size() ) {
@@ -53,7 +58,14 @@ void decode_file(FILE *fin, FILE *fout, int ch, size_t buf_size) {
             throw runtime_error( "decode_file() write error. Written " + to_string( res ) );
         }
         to_go -= res;
+
+        cur_percent = ( 1.0 - (double)to_go / (double)all_size ) * 100.0;
+        if ( cur_percent - last_percent > 1.0 ) {
+            cout << "\r";
+            cout << (int) cur_percent << "% complete  ";
+        }
     }
+    cout << endl;
 }
 
 std::string add_chan_idx( const string& fn, int ch ) {
