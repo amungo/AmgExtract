@@ -1,8 +1,10 @@
 #include <iostream>
 #include <string>
 #include <set>
+#include <vector>
 
 #include "utils.h"
+#include "decoder.h"
 
 using namespace std;
 
@@ -67,6 +69,14 @@ int main(int argc, char *argv[])
             cout << e.what();
             return 1;
         }
+    }
+
+    cout << "Statistica:" << endl;
+    printf( "        %6d%6d%6d%6d\n", -3, -1, 1, 3 );
+    for ( int idx : chans_idx ) {
+        cout << "[ " << idx << " ] ";
+        std::vector<double> stats = decoder_stat( idx );
+        printf( "   %6.2f%6.2f%6.2f%6.2f\n", stats[3], stats[2], stats[0], stats[1] );
     }
 
     return 0;

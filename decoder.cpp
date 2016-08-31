@@ -2,7 +2,6 @@
 #include <string>
 #include "decoder.h"
 
-
 template< typename T_IN, typename T_OUT, int ch >
 void decode_vector(const std::vector<T_IN> &src, std::vector<T_OUT> &out) {
     if ( out.size() < src.size() ) {
@@ -22,4 +21,21 @@ void decode8_vector(const std::vector<uint8_t> &src, std::vector<int8_t> &out, i
     case 3: decode_vector<uint8_t, int8_t, 3>( src, out ); break;
     default: throw std::runtime_error("decode8_vector(): invalid channel " + std::to_string(out_chan) );
     }
+}
+
+std::vector<double> decoder_stat(int ch) {
+    double overall = 0.0;
+    for ( int i = 0; i < 4; i++ ) {
+        overall += global_decoder_statistic[ ch ][ i ];
+    }
+    if ( overall < 0.1 ) {
+        overall = 1.0;
+    }
+    std::vector<double> statistic;
+    statistic.resize(4);
+    for ( int i = 0; i < 4; i++ ) {
+        statistic[ i ] = global_decoder_statistic[ ch ][ i ] / overall;
+    }
+    return statistic;
+
 }
