@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 #include <string>
 
 #include "utils.h"
@@ -8,10 +9,11 @@
 using namespace std;
 
 int64_t get_file_size(const char *fname) {
-    FILE* f = fopen(fname, "rb");
+    std::ifstream f (fname, std::ifstream::binary);
+
     if ( f ) {
         int64_t sz = get_file_size( f );
-        fclose(f);
+        f.close();
         return sz;
     } else {
         throw runtime_error( "get_file_size(): File IO error - " + string(fname) );
@@ -19,24 +21,24 @@ int64_t get_file_size(const char *fname) {
     return 0;
 }
 
-int64_t get_file_size(FILE *f) {
-    if ( f ) {
-        int64_t old_pos = ftell(f);
-        _fseeki64( f, 0, SEEK_END );
-        int64_t sz = _ftelli64(f);
-        _fseeki64( f, old_pos, SEEK_SET );
+int64_t get_file_size(std::ifstream& f) {
+    if ( f.is_open() ) {
+        std::streampos old_pos = f.tellg();
+        f.seekg(0, f.end);
+        int64_t sz = f.tellg();
+        f.seekg( old_pos, f.beg );
         return sz;
     } else {
-        throw runtime_error( "get_file_size(): File ptr is null" );
+        throw runtime_error( "get_file_size(): File error" );
     }
 }
 
-void decode_file(FILE *fin, FILE *fout, int ch, size_t buf_size) {
-    if ( !fin || !fout ) {
-        throw runtime_error( "decode_file() file ptr is null" );
+void decode_file(std::ifstream& fin, std::ofstream& fout, int ch, size_t buf_size) {
+    if ( !fin.is_open() || !fout.is_open() ) {
+        throw runtime_error( "decode_file() file was not opened" );
     }
     int64_t all_size = get_file_size( fin );
-    fseek( fin, 0, SEEK_SET );
+    fin.seekg( 0 , fin.beg );
 
     vector<uint8_t> inbuf;
     vector<int8_t> outbuf;
@@ -48,16 +50,18 @@ void decode_file(FILE *fin, FILE *fout, int ch, size_t buf_size) {
     double last_percent = 0.0;
     double cur_percent = 0.0;
     while ( to_go >= inbuf.size() ) {
-        size_t res = fread( inbuf.data(), sizeof(uint8_t), inbuf.size(), fin );
+        fin.read( (char*)inbuf.data(), sizeof(uint8_t) * inbuf.size() );
+        std::streamsize res = fin.gcount();
         if ( res != inbuf.size() ) {
             throw runtime_error( "decode_file() read error. Read " + to_string( res ) );
         }
         decode8_vector( inbuf, outbuf, ch );
-        res = fwrite( outbuf.data(), sizeof(int8_t), outbuf.size(), fout );
-        if ( res != outbuf.size() ) {
-            throw runtime_error( "decode_file() write error. Written " + to_string( res ) );
+        fout.write( (const char*)outbuf.data(), sizeof(int8_t) * outbuf.size() );
+
+        if ( fout.bad() ) {
+            throw runtime_error( "decode_file() write error." );
         }
-        to_go -= res;
+        to_go -= outbuf.size();
 
         cur_percent = ( 1.0 - (double)to_go / (double)all_size ) * 100.0;
         if ( cur_percent - last_percent > 1.0 ) {

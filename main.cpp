@@ -58,13 +58,13 @@ int main(int argc, char *argv[])
     for ( int idx : chans_idx ) {
         cout << "extracting channel " << idx << endl;
         try {
-            FILE* fin  = fopen( fname.c_str(), "rb" );
-            FILE* fout = fopen( add_chan_idx( fname, idx ).c_str(), "wb" );
+            std::ifstream fin  ( fname.c_str(), std::ifstream::binary );
+            std::ofstream fout ( add_chan_idx( fname, idx ).c_str(), std::ifstream::binary );
 
             decode_file( fin, fout, idx );
 
-            fclose(fin);
-            fclose(fout);
+            fin.close();
+            fout.close();
         } catch ( std::exception& e ) {
             cout << e.what();
             return 1;
