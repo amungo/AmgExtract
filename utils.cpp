@@ -49,10 +49,10 @@ void decode_file(std::ifstream& fin, std::ofstream& fout, int ch, size_t buf_siz
     int64_t to_go = all_size;
     double last_percent = 0.0;
     double cur_percent = 0.0;
-    while ( to_go >= inbuf.size() ) {
+    while ( to_go >= (int64_t)inbuf.size() ) {
         fin.read( (char*)inbuf.data(), sizeof(uint8_t) * inbuf.size() );
         std::streamsize res = fin.gcount();
-        if ( res != inbuf.size() ) {
+        if ( res != (int64_t)inbuf.size() ) {
             throw runtime_error( "decode_file() read error. Read " + to_string( res ) );
         }
         decode8_vector( inbuf, outbuf, ch );
