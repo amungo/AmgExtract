@@ -33,7 +33,8 @@ int64_t get_file_size(std::ifstream& f) {
     }
 }
 
-void decode_file(std::ifstream& fin, std::ofstream& fout, int ch, size_t buf_size) {
+void decode_file(std::ifstream& fin, std::ofstream& fout, std::ofstream& fout_gyro, int chip, int ch, size_t buf_size)
+{
     if ( !fin.is_open() || !fout.is_open() ) {
         throw runtime_error( "decode_file() file was not opened" );
     }
@@ -44,7 +45,7 @@ void decode_file(std::ifstream& fin, std::ofstream& fout, int ch, size_t buf_siz
     vector<int8_t> outbuf;
 
     inbuf.resize( buf_size );
-    outbuf.resize( buf_size );
+    outbuf.resize((buf_size - NUT4_GYRO_HEADER_SIZE) / 2);
 
     int64_t to_go = all_size;
     double last_percent = 0.0;
@@ -55,13 +56,18 @@ void decode_file(std::ifstream& fin, std::ofstream& fout, int ch, size_t buf_siz
         if ( res != (int64_t)inbuf.size() ) {
             throw runtime_error( "decode_file() read error. Read " + to_string( res ) );
         }
-        decode8_vector( inbuf, outbuf, ch );
-        fout.write( (const char*)outbuf.data(), sizeof(int8_t) * outbuf.size() );
 
+        decode8_vector( inbuf, outbuf, chip, ch );
+        fout.write( (const char*)outbuf.data(), sizeof(int8_t) * outbuf.size() );
         if ( fout.bad() ) {
             throw runtime_error( "decode_file() write error." );
         }
-        to_go -= outbuf.size();
+
+        // Write sensors data
+        fout_gyro.write((const char*)inbuf.data(), NUT4_GYRO_HEADER_SIZE);
+
+        //to_go -= outbuf.size();
+        to_go -= inbuf.size();
 
         cur_percent = ( 1.0 - (double)to_go / (double)all_size ) * 100.0;
         if ( cur_percent - last_percent > 1.0 ) {

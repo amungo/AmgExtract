@@ -3,11 +3,12 @@
 
 #include <cstdint>
 #include <vector>
+#include "utils.h"
 
-void decode8_vector( const std::vector<uint8_t>& src, std::vector<int8_t>& out, int out_chan );
+void decode8_vector( const std::vector<uint8_t>& src, std::vector<int8_t>& out, int chip, int out_chan, int header = NUT4_GYRO_HEADER_SIZE);
 
 template< typename T_IN, typename T_OUT, int ch >
-void decode_vector( const std::vector<T_IN>& src, std::vector<T_OUT>& out );
+void decode_vector( const std::vector<T_IN>& src, std::vector<T_OUT>& out, int chip);
 
 static double global_decoder_statistic[4][4] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
